@@ -1,6 +1,8 @@
 import '../styles/styles.css'
 
 import {Container} from "@mui/material";
+import {ModalPresenter} from "../src/libs/modalPresenter";
+
 
 function MyApp({ Component, pageProps }) {
   return (
@@ -13,6 +15,7 @@ function MyApp({ Component, pageProps }) {
           <Container maxWidth="md">
               <Component {...pageProps} />
           </Container>
+          <ModalPresenter />
       </>
   )
 }

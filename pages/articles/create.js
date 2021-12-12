@@ -7,6 +7,8 @@ import {readFile} from "../../utils/readFile";
 import {createFormDataFromObject, getPresingedPostURL} from "../../src/libs/fileupload";
 import {useState} from "react";
 import {useRouter} from "next/router";
+import {modalController} from "../../src/libs/modalPresenter";
+import ArticleShareModal from "../../src/components/articles/ArticleShareModal";
 
 const CreateFakeLink = () => {
 
@@ -70,6 +72,10 @@ const CreateFakeLink = () => {
         }
     }
 
+    const showModalTest = () => {
+        modalController(ArticleShareModal)
+    }
+
     return (
         <>
             <MainSubColumn
@@ -84,6 +90,7 @@ const CreateFakeLink = () => {
                         <TextField fullWidth id="siteName" label="사이트 이름" value={siteName} onChange={e => setSiteName(e.target.value)} margin="normal" />
                         <TextField fullWidth id="siteURL" label="사이트 주소" value={siteURL} onChange={e => setSiteURL(e.target.value)} margin="normal" />
                         <Button onClick={onClickSave}>등록</Button>
+                        <Button onClick={showModalTest}>모달 테스트</Button>
                     </>
                 }
                 subSection={
