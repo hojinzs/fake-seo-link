@@ -1,6 +1,5 @@
 import {Modal} from "@mui/material";
 import {useState} from "react";
-import {PositionCentered} from "../components/styled/positions";
 
 function ModalPresenter(){
 
@@ -17,8 +16,13 @@ function ModalPresenter(){
         return (
             modalList.map((modal, i) => {
                 const Component = modal.component
+                const modalProps = modal.modalProps
                 return (
-                    <Modal key={modal.id} open={isShowModal(modal.id)} {...modal.modalProps}>
+                    <Modal key={modal.id}
+                           open={isShowModal(modal.id)}
+                           closeAfterTransition={true}
+                           onClose={modalProps.onClose}
+                    >
                         <>
                             <Component {...modal.componentProps} />
                         </>
@@ -45,25 +49,33 @@ const modalControls = {
 
         const id = modalControls.list.length
 
-        const onClose = () => modalControls.toggleOpenModal(id)
+        const onClose = () => {
+            modalControls.toggleOpenModal(id)
+            setTimeout(() => {
+                modalControls.unMountModal(id)
+            }, 500)
+        }
+
+        const controls = {
+            unMount: () => modalControls.unMountModal(id),
+            toggleShow: () => modalControls.toggleOpenModal(id),
+        }
 
         modalControls.setter([...modalControls.list, {
             id: id,
             component: component,
             modalProps: {
-                onClose
+                onClose,
             },
             componentProps: {
                 ...props,
-            }
+                controls,
+            },
         }])
         modalControls.toggleOpenModal(id)
 
         /* 컨트롤 반환 */
-        return  {
-            unMount: () => modalControls.unMountModal(id),
-            toggleShow: () => modalControls.toggleOpenModal(id)
-        }
+        return  controls
     },
     unMountModal: (id) => {
         modalControls.setter(modalControls.list.filter((item) => {
@@ -72,8 +84,10 @@ const modalControls = {
     },
     toggleOpenModal: (id) => {
         if(modalControls.showList.includes(id)) {
+            // modal Close
             modalControls.showListSetter(modalControls.showList.filter(showId => showId !== id))
         } else {
+            // modal Open
             modalControls.showListSetter([...modalControls.showList, id])
         }
     }

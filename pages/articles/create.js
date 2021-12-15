@@ -9,6 +9,7 @@ import {useState} from "react";
 import {useRouter} from "next/router";
 import {modalController} from "../../src/libs/modalPresenter";
 import ArticleShareModal from "../../src/components/articles/ArticleShareModal";
+import ArticleCard from "../../components/ArticleCard";
 
 const CreateFakeLink = () => {
 
@@ -73,7 +74,8 @@ const CreateFakeLink = () => {
     }
 
     const showModalTest = () => {
-        modalController(ArticleShareModal)
+        const articleId = "61b4ed37d5d962d9ab995f18";
+        modalController(ArticleShareModal, { articleId })
     }
 
     return (
@@ -94,17 +96,10 @@ const CreateFakeLink = () => {
                     </>
                 }
                 subSection={
-                    <Card>
-                        <CardMedia component="img" src={imageURL} />
-                        <CardContent>
-                            <Typography variant="h5">
-                                { title }
-                            </Typography>
-                            <Typography variant="p">
-                                { description }
-                            </Typography>
-                        </CardContent>
-                    </Card>
+                    <ArticleCard title={title}
+                                 description={description}
+                                 imageURL={imageURL}
+                    />
                 }
             />
         </>
