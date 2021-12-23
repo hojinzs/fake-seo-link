@@ -18,7 +18,21 @@ const createFormDataFromObject = (object) => {
     return formData
 }
 
+const getKeyAfterUpload = async (file) => {
+
+    const { url, fields } = await getPresingedPostURL(file.name)
+    const formData = createFormDataFromObject(fields)
+    formData.append('file', file)
+    await axios.post(url, formData)
+
+    return {
+        url: `${url}/${fields.key}`,
+        key: fields.key
+    }
+}
+
 export {
     getPresingedPostURL,
-    createFormDataFromObject
+    createFormDataFromObject,
+    getKeyAfterUpload
 }

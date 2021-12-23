@@ -26,7 +26,7 @@ class Storage {
         })
     }
 
-    async createPresignedPost(fileName) {
+    async createPresignedPost(fileName, directory = 'tmp') {
 
         const hash = await createRandomHash()
         const ext = getFileExtension(fileName)
@@ -34,13 +34,43 @@ class Storage {
         return this.storage.createPresignedPost({
             Bucket: this.bucket,
             Fields: {
-                key: `${hash}.${ext}`
+                key: `${directory}/${hash}.${ext}`
             },
             Expires: 60,
             Conditions: [
                 ['content-length-range', 0, 1048576],
             ]
         });
+    }
+
+    async moveFile(sourcefileKey, dir = null) {
+
+        const hash = await createRandomHash()
+        const ext = getFileExtension(sourcefileKey)
+        const key = `${dir === null ? '' : '/'+dir}/${hash}.${ext}`
+
+        return new Promise((resolve, reject) => {
+            
+            this.storage.copyObject({
+                Key: key,
+                Bucket: this.bucket,
+                CopySource: `/${this.bucket}/${sourcefileKey}`
+            }, (result) => {
+
+                if(result) {
+                    reject({
+                        result: result
+                    })
+                } else {
+                    resolve({
+                        key: key,
+                        url: `https://${this.storage.endpoint.hostname}${key}`,
+                        result: result
+                    })
+                }
+            })
+
+        })
     }
 
     static init() {
