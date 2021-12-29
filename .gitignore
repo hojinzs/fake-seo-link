@@ -32,3 +32,6 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# google cloud
+.google-key.json

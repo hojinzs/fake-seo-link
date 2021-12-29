@@ -1,19 +1,37 @@
 import AWS from 'aws-sdk'
+import {Storage as GCS} from "@google-cloud/storage"
 import {createRandomHash} from "../utils/hash";
 import {getFileExtension} from "../utils/files";
 
 class Storage {
 
     constructor() {
-        this.storage = new AWS.S3({
-            accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_S3_ACCESS_KEY_SECRET,
-            endpoint: process.env.AWS_S3_ENDPOINT,
-            s3ForcePathStyle: true,
-            signatureVersion: "v4",
-        })
 
-        this.bucket = process.env.AWS_S3_BUCKET
+        const driver = process.env.STORAGE_DRIVER
+
+        switch (driver) {
+            case 'S3':
+                this.storage = new AWS.S3({
+                    accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
+                    secretAccessKey: process.env.AWS_S3_ACCESS_KEY_SECRET,
+                    endpoint: process.env.AWS_S3_ENDPOINT,
+                    s3ForcePathStyle: true,
+                    signatureVersion: "v4",
+                })
+        
+                this.bucket = process.env.AWS_S3_BUCKET
+                break;
+            case 'GCS':
+                this.storage = new GCS({
+                    projectId: process.env.GCP_PROJECT_ID,
+                    keyFilename: process.env.GCP_PROJECT_KEY,
+                })
+
+                this.bucket = process.env.GCP_GCS_BUCKET
+                break;
+            default:
+                throw new Error('storage driver in .env file is not valid')
+        }
     }
 
     putObject(body) {
@@ -31,16 +49,42 @@ class Storage {
         const hash = await createRandomHash()
         const ext = getFileExtension(fileName)
 
-        return this.storage.createPresignedPost({
-            Bucket: this.bucket,
-            Fields: {
-                key: `${directory}/${hash}.${ext}`
-            },
-            Expires: 60,
-            Conditions: [
-                ['content-length-range', 0, 1048576],
-            ]
-        });
+        const driver = process.env.STORAGE_DRIVER
+
+        console.log("driver => ", driver)
+
+        switch(driver){
+            case 'S3':
+                return this.storage.createPresignedPost({
+                    Bucket: this.bucket,
+                    Fields: {
+                        key: `${directory}/${hash}.${ext}`
+                    },
+                    Expires: 60,
+                    Conditions: [
+                        ['content-length-range', 0, 1048576],
+                    ]
+                });
+            case 'GCS':
+                console.log("presignde GCS")
+                const [url] = await this.storage
+                    .bucket(this.bucket)
+                    .file(`${directory}/${hash}.${ext}`)
+                    .getSignedUrl({
+                        version: 'v4',
+                        action: 'write',
+                        expires: Date.now() + 15 * 60 * 1000,
+                        contentType: 'application/octet-stream'
+                    });
+                return {
+                    url: url,
+                    fields: {
+                        contentType: "application/octet-stream"
+                    }
+                };
+            default:
+                throw new Error('storage is un initialize')
+        }
     }
 
     async moveFile(sourcefileKey, dir = null) {
